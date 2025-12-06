@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Generator Nilai Pro (6 NH)</title>
+    <style>
+        :root { --primary: #2563eb; --secondary: #1e40af; --accent: #f59e0b; --success: #10b981; --bg: #f8fafc; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: #1e293b; }
+        
+        .container { max-width: 1600px; margin: 0 auto; background: white; padding: 25px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); border-radius: 12px; }
+        
+        /* Header & Mode Selector */
+        header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
+        h1 { margin: 0 0 10px 0; color: var(--secondary); font-size: 24px; }
+        
+        .mode-selector { display: flex; justify-content: center; gap: 20px; margin-top: 15px; background: #f1f5f9; padding: 10px; border-radius: 8px; width: fit-content; margin-left: auto; margin-right: auto; }
+        .radio-label { cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600; padding: 8px 16px; border-radius: 6px; transition: 0.2s; }
+        .radio-label:hover { background: #e2e8f0; }
+        input[type="radio"] { transform: scale(1.2); }
+        input[type="radio"]:checked + span { color: var(--primary); }
+
+        /* Config Panel */
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; background: #eff6ff; padding: 20px; border-radius: 10px; border: 1px solid #dbeafe; margin-bottom: 20px; }
+        .conf-item label { display: block; font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
+        .conf-item input { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 14px; text-align: center; }
+        .conf-flex { display: flex; gap: 5px; align-items: center; }
+
+        /* Table Styles */
+        .table-wrapper { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px; max-height: 70vh; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; min-width: 1500px; }
+        
+        thead { position: sticky; top: 0; z-index: 20; }
+        th { background: #1e293b; color: white; padding: 10px; font-weight: 600; border-right: 1px solid #334155; border-bottom: 1px solid #334155; white-space: nowrap; }
+        th.grp-input { background: #334155; }
+        th.grp-gen { background: #ea580c; }
+        th.grp-res { background: #15803d; }
+        
+        td { padding: 4px; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; text-align: center; }
+        tr:hover { background-color: #f1f5f9; }
+
+        /* Inputs Inside Table */
+        input.cell-input { width: 100%; border: none; background: transparent; text-align: center; padding: 5px; font-family: inherit; font-size: 13px; }
+        input.cell-input:focus { background: white; outline: 2px solid var(--primary); border-radius: 3px; }
+        input.nm { text-align: left; }
+        input.inp-raw { background: #fff7ed; color: #9a3412; font-weight: 600; }
+        input.inp-target { background: #eff6ff; color: #1e40af; font-weight: 600; }
+        
+        /* Result Cells */
+        .val-nh { color: #555; }
+        .val-avg { font-weight: bold; background: #fff1f2; color: #be123c; }
+        .val-us { font-weight: bold; background: #ecfdf5; color: #047857; }
+        .val-final { font-weight: bold; background: #f0f9ff; color: #0369a1; font-size: 14px; }
+        
+        /* Disabled Style */
+        .disabled-mode { opacity: 0.5; pointer-events: none; background: #e2e8f0 !important; }
+
+        /* Buttons */
+        .action-bar { margin-top: 20px; display: flex; justify-content: flex-end; gap: 15px; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+        button { padding: 12px 24px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
+        .btn-run { background: var(--primary); color: white; }
+        .btn-run:hover { background: var(--secondary); transform: translateY(-1px); }
+        .btn-xls { background: var(--success); color: white; }
+        .btn-xls:hover { background: #047857; transform: translateY(-1px); }
+        .btn-rst { background: #64748b; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+	<!-- TAMBAHAN BARU: Badge Created By -->
+    <div style="position: absolute; top: 15px; left: 20px; font-size: 13px; color: #64748b; font-weight: 600; background: #f1f5f9; padding: 5px 12px; border-radius: 20px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 6px;">
+        <span style="font-size: 16px;">👨‍💻</span> Created by Pebrianto
+    </div>
+        <h1>Sistem Generator Nilai Siswa (Pro)</h1>
+        
+        <!-- Pilihan Mode -->
+        <div class="mode-selector">
+            <label class="radio-label">
+                <input type="radio" name="mode" value="target" checked onchange="toggleMode()">
+                <span>🎯 Mode Target (Hitung Mundur)</span>
+            </label>
+            <label class="radio-label">
+                <input type="radio" name="mode" value="flow" onchange="toggleMode()">
+                <span>🌊 Mode Alami (Ranking Adil)</span>
+            </label>
+        </div>
+    </header>
+
+    <!-- Panel Konfigurasi -->
+    <div class="config-grid">
+        <div class="conf-item">
+            <label>Jml Nilai Harian (1-6)</label>
+            <input type="number" id="confJumNH" value="4" min="1" max="6">
+        </div>
+        <div class="conf-item">
+            <label>Range Nilai Harian (Baru)</label>
+            <div class="conf-flex">
+                <input type="number" id="confMinNH" value="70">
+                <span>-</span>
+                <input type="number" id="confMaxNH" value="95">
+            </div>
+        </div>
+        <div class="conf-item">
+            <label>Range Nilai Ujian (Baru)</label>
+            <div class="conf-flex">
+                <input type="number" id="confMinUS" value="70">
+                <span>-</span>
+                <input type="number" id="confMaxUS" value="95">
+            </div>
+        </div>
+        <div class="conf-item">
+            <label>Bobot (Harian / Ujian)</label>
+            <div class="conf-flex">
+                <input type="number" id="confBobotNH" value="40">%
+                <span>/</span>
+                <input type="number" id="confBobotUS" value="60">%
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabel Input & Hasil -->
+    <div class="table-wrapper">
+        <table id="mainTable">
+            <thead>
+                <tr>
+                    <th rowspan="2" class="grp-input">No</th>
+                    <th rowspan="2" class="grp-input" style="min-width: 200px;">Nama Siswa</th>
+                    <th colspan="3" class="grp-input">INPUT DATA MENTAH</th>
+                    <th colspan="7" class="grp-gen">GENERATE NILAI HARIAN (Ranking Adjusted)</th>
+                    <th colspan="2" class="grp-res">HASIL AKHIR</th>
+                </tr>
+                <tr>
+                    <!-- Input Columns -->
+                    <th class="grp-input" style="width: 70px;">NH Awal</th>
+                    <th class="grp-input" style="width: 70px;">US Awal</th>
+                    <th class="grp-input" style="width: 70px;">Target</th>
+
+                    <!-- Output Columns -->
+                    <th class="grp-gen" style="width: 50px;">NH1</th>
+                    <th class="grp-gen" style="width: 50px;">NH2</th>
+                    <th class="grp-gen" style="width: 50px;">NH3</th>
+                    <th class="grp-gen" style="width: 50px;">NH4</th>
+                    <th class="grp-gen" style="width: 50px;">NH5</th>
+                    <th class="grp-gen" style="width: 50px;">NH6</th>
+                    <th class="grp-gen" style="width: 60px;">RATA2</th>
+
+                    <th class="grp-res" style="width: 70px;">N.UJIAN</th>
+                    <th class="grp-res" style="width: 70px;">AKHIR</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- Baris akan diisi JS -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="action-bar">
+        <button class="btn-rst" onclick="resetTable()">↻ Reset</button>
+        <button class="btn-run" onclick="generateValues()">⚡ GENERATE NILAI</button>
+        <button class="btn-xls" onclick="exportExcel()">📥 Export Excel</button>
+    </div>
+</div>
+
+<script>
+    window.onload = function() {
+        renderTable(35);
+        toggleMode();
+    };
+
+    function renderTable(rows) {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        for(let i=1; i<=rows; i++) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${i}</td>
+                <td><input class="cell-input nm" type="text" placeholder="Siswa ${i}"></td>
+                <td><input class="cell-input inp-raw nh-raw" type="number" value="${rand(50, 90)}"></td>
+                <td><input class="cell-input inp-raw us-raw" type="number" value="${rand(50, 90)}"></td>
+                <td><input class="cell-input inp-target target-val" type="number" value="85"></td>
+                
+                <td class="val-nh nh1">-</td>
+                <td class="val-nh nh2">-</td>
+                <td class="val-nh nh3">-</td>
+                <td class="val-nh nh4">-</td>
+                <td class="val-nh nh5">-</td>
+                <td class="val-nh nh6">-</td>
+                <td class="val-avg">-</td>
+                
+                <td class="val-us">-</td>
+                <td class="val-final">-</td>
+            `;
+            tbody.appendChild(tr);
+        }
+    }
+
+    // Fungsi Random Helper
+    function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+    // Toggle Tampilan Input Target berdasarkan Mode
+    function toggleMode() {
+        const mode = document.querySelector('input[name="mode"]:checked').value;
+        const targets = document.querySelectorAll('.target-val');
+        
+        targets.forEach(el => {
+            if(mode === 'flow') {
+                el.classList.add('disabled-mode');
+                el.value = '-';
+            } else {
+                el.classList.remove('disabled-mode');
+                if(el.value === '-') el.value = '85';
+            }
+        });
+    }
+
+    // Fungsi Mapping (Interpolasi Linear)
+    function mapVal(val, inMin, inMax, outMin, outMax) {
+        if(inMax === inMin) return outMax;
+        return outMin + ((val - inMin) * (outMax - outMin) / (inMax - inMin));
+    }
+
+    function generateValues() {
+        const mode = document.querySelector('input[name="mode"]:checked').value;
+        const rows = document.querySelectorAll('#tableBody tr');
+        
+        // --- 1. CONFIG ---
+        const jumNH = parseInt(document.getElementById('confJumNH').value);
+        const minNH = parseFloat(document.getElementById('confMinNH').value);
+        const maxNH = parseFloat(document.getElementById('confMaxNH').value);
+        const minUS = parseFloat(document.getElementById('confMinUS').value);
+        const maxUS = parseFloat(document.getElementById('confMaxUS').value);
+        const bobotNH = parseFloat(document.getElementById('confBobotNH').value)/100;
+        const bobotUS = parseFloat(document.getElementById('confBobotUS').value)/100;
+
+        // --- 2. ANALISIS KELAS (Cari Min/Max Global) ---
+        let rawNH = [], rawUS = [];
+        rows.forEach(r => {
+            rawNH.push(parseFloat(r.querySelector('.nh-raw').value) || 0);
+            rawUS.push(parseFloat(r.querySelector('.us-raw').value) || 0);
+        });
+        const gMinNH = Math.min(...rawNH), gMaxNH = Math.max(...rawNH);
+        const gMinUS = Math.min(...rawUS), gMaxUS = Math.max(...rawUS);
+
+        // --- 3. PROSES PER SISWA ---
+        rows.forEach((r, idx) => {
+            let myRawNH = rawNH[idx];
+            let myRawUS = rawUS[idx];
+            let myTarget = parseFloat(r.querySelector('.target-val').value) || 0;
+
+            // A. Tentukan Rata-rata NH Ideal berdasarkan Ranking
+            // KUNCI KEADILAN: Siswa dengan NH Awal tinggi, PASTI dapat Rata2 NH tinggi juga.
+            let idealAvgNH = mapVal(myRawNH, gMinNH, gMaxNH, minNH, maxNH);
+            
+            // B. Pecah IdealAvgNH menjadi (n) Nilai Harian
+            // Kita buat variasi random tapi rata-ratanya tetap = idealAvgNH
+            let arrNH = [];
+            let currentSum = 0;
+            
+            // Generate n-1 nilai random disekitar rata-rata
+            for(let i=0; i < jumNH-1; i++) {
+                let variance = rand(-3, 3); // Variasi kecil +/- 3 poin
+                let val = Math.round(idealAvgNH + variance);
+                // Clamp
+                if(val < minNH) val = minNH; if(val > maxNH) val = maxNH;
+                arrNH.push(val);
+                currentSum += val;
+            }
+            
+            // Nilai terakhir adalah penyeimbang agar rata-rata pas
+            let lastVal = Math.round((idealAvgNH * jumNH) - currentSum);
+            // Clamp nilai terakhir (kalau meleset dikit gpp, yang penting masuk akal)
+            if(lastVal < minNH) lastVal = minNH; if(lastVal > maxNH) lastVal = maxNH;
+            arrNH.push(lastVal);
+
+            // Hitung Actual Average NH dari array yang sudah dibuat
+            let finalAvgNH = arrNH.reduce((a,b)=>a+b,0) / jumNH;
+
+            // C. Hitung Nilai Ujian (Tergantung Mode)
+            let finalUS = 0;
+
+            if (mode === 'target') {
+                // MODE TARGET: Hitung mundur dari Target Akhir
+                // Target = (Avg * 0.4) + (US * 0.6)
+                // US = (Target - (Avg * 0.4)) / 0.6
+                let reqUS = (myTarget - (finalAvgNH * bobotNH)) / bobotUS;
+                finalUS = Math.round(reqUS);
+                
+                // Clamp US agar tidak tidak masuk akal
+                if(finalUS < minUS) finalUS = minUS;
+                if(finalUS > maxUS) finalUS = maxUS;
+
+            } else {
+                // MODE ALAMI: Konversi US Awal berdasarkan Ranking
+                finalUS = Math.round(mapVal(myRawUS, gMinUS, gMaxUS, minUS, maxUS));
+            }
+
+            // D. Hitung Nilai Akhir
+            let finalScore = (finalAvgNH * bobotNH) + (finalUS * bobotUS);
+
+            // --- 4. RENDER ---
+            // Bersihkan dulu
+            for(let k=1; k<=6; k++) r.querySelector(`.nh${k}`).innerText = '-';
+            
+            // Isi NH sesuai jumlah
+            arrNH.forEach((val, i) => {
+                r.querySelector(`.nh${i+1}`).innerText = val;
+            });
+            
+            r.querySelector('.val-avg').innerText = finalAvgNH.toFixed(1);
+            r.querySelector('.val-us').innerText = finalUS;
+            r.querySelector('.val-final').innerText = finalScore.toFixed(2);
+        });
+
+        alert("Selesai! Nilai telah digenerate dengan metode: " + (mode === 'target' ? 'Target Based' : 'Fair Ranking Flow'));
+    }
+
+    function exportExcel() {
+        let tbl = document.getElementById('mainTable').outerHTML;
+        tbl = tbl.replace(/<input[^>]*value="([^"]*)"[^>]*>/g, '$1'); 
+        tbl = tbl.replace(/<input[^>]*>/g, ''); 
+        
+        let a = document.createElement('a');
+        a.href = 'data:application/vnd.ms-excel,' + encodeURIComponent(tbl);
+        a.download = 'Rekap_Nilai_Generate.xls';
+        a.click();
+    }
+
+    function resetTable() {
+        if(confirm("Reset semua data?")) renderTable(35);
+    }
+</script>
+
+</body>
+</html>
